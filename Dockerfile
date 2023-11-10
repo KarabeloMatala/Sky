@@ -1,18 +1,18 @@
 FROM ubuntu:latest
 
-RUN apt-get update
-RUN apt-get -y install nginx curl
+RUN apt-get update && apt-get install -y nginx curl
 
-RUN mkdir -p /var/www/html/home /var/www/html/about /var/www/html/products /var/www/html/blog /var/www/html/contacts
-COPY index.html /var/www/html/index.html
-COPY home.html /var/www/html/home/index.html
-COPY about.html /var/www/html/about/index.html
-COPY products.html /var/www/html/products/index.html
-COPY blog.html /var/www/html/blog/index.html
-COPY contacts.html /var/www/html/contacts/index.html
+# Install Back4App CLI
+RUN curl -sL https://cli.back4app.com/install | sh
 
+# Back4App login
+RUN b4a login --appId YOUR_APP_ID --appSecret YOUR_APP_SECRET
+
+# Copy website files to the Nginx directory
+COPY . /var/www/html
+
+# Expose port 80
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost/ || exit 1
-
+# Start the Nginx server in daemon mode
 CMD ["nginx", "-g", "daemon off;"]
