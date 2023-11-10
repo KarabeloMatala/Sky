@@ -1,24 +1,27 @@
-FROM ubuntu:latest
+name: Build Docker image
 
-RUN apt-get update
-RUN apt-get -y install nginx curl
+on:
+  push:
+    branches:
+      - main
 
-# Create directories for each page
-RUN mkdir -p /var/www/html/home
-RUN mkdir -p /var/www/html/about
-RUN mkdir -p /var/www/html/products
-RUN mkdir -p /var/www/html/blog
-RUN mkdir -p /var/www/html/contacts
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-# Copy HTML files for each page
-COPY home/index.html /var/www/html/home/index.html
-COPY about/index.html /var/www/html/about/index.html
-COPY products/index.html /var/www/html/products/index.html
-COPY blog/index.html /var/www/html/blog/index.html
-COPY contacts/index.html /var/www/html/contacts/index.html
+    steps:
+      - uses: actions/checkout@v3
 
-EXPOSE 80
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost/ || exit 1
+      - name: Build Docker image
+        run: docker buildx build -t my-nginx-app .
 
-CMD ["nginx", "-g", "daemon off;"]
+      - name: Push Docker image to Docker Hub
+        uses: docker/push-image-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          repository: my-nginx-app
+
